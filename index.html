@@ -1,0 +1,556 @@
+<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2degrees Escalation Dashboard</title>
+    <style>
+        /* Global Reset & Variables */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f1f5f9; /* slate-100 background for the whole page */
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Dashboard Container */
+        #ops-dashboard-root {
+            line-height: 1.5;
+            color: #1e293b; /* slate-800 */
+            background-color: #f8fafc; /* slate-50 */
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            min-height: 700px; /* Taller for standalone view */
+            margin: 20px;
+        }
+
+        /* Sidebar Styling */
+        #ops-dashboard-root .sidebar {
+            width: 280px;
+            background-color: #0f172a; /* slate-900 */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        #ops-dashboard-root .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #334155; /* slate-700 */
+        }
+
+        #ops-dashboard-root .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #60a5fa; /* blue-400 */
+            margin: 0;
+        }
+
+        #ops-dashboard-root .sidebar-subtitle {
+            font-size: 0.75rem;
+            color: #94a3b8; /* slate-400 */
+            margin-top: 0.25rem;
+        }
+
+        #ops-dashboard-root .nav-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: none;
+            color: #cbd5e1; /* slate-300 */
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            gap: 12px;
+        }
+
+        #ops-dashboard-root .nav-btn:hover {
+            background-color: #1e293b; /* slate-800 */
+            color: white;
+        }
+
+        #ops-dashboard-root .nav-btn.active {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+            border-left: 4px solid #60a5fa;
+        }
+
+        #ops-dashboard-root .sidebar-footer {
+            margin-top: auto;
+            padding: 1rem;
+            background-color: #1e293b; /* slate-800 */
+            margin: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #334155;
+        }
+
+        /* Content Area Styling */
+        #ops-dashboard-root .content-area {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background-color: #f8fafc;
+        }
+
+        #ops-dashboard-root .section {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        #ops-dashboard-root .section.active {
+            display: block; /* Show when active */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Typography & Cards */
+        #ops-dashboard-root h2 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            margin-top: 0;
+        }
+
+        #ops-dashboard-root .section-desc {
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        #ops-dashboard-root .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        #ops-dashboard-root .card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #ops-dashboard-root .card-body {
+            padding: 1.5rem;
+        }
+
+        #ops-dashboard-root .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            #ops-dashboard-root .grid-2 {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* Utility Classes for this component */
+        .text-red { color: #dc2626; }
+        .bg-red-soft { background-color: #fef2f2; }
+        .border-red { border-left: 4px solid #dc2626; }
+        
+        .text-blue { color: #2563eb; }
+        .bg-blue-soft { background-color: #eff6ff; }
+        .border-blue { border-left: 4px solid #2563eb; }
+
+        .text-green { color: #16a34a; }
+        .bg-green-soft { background-color: #f0fdf4; }
+        .border-green { border-left: 4px solid #16a34a; }
+
+        .text-orange { color: #ea580c; }
+        .bg-orange-soft { background-color: #fff7ed; }
+        .border-orange { border: 1px solid #fed7aa; }
+
+        .font-bold { font-weight: 700; }
+        .text-sm { font-size: 0.875rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .flex-center { display: flex; align-items: center; }
+        .gap-2 { gap: 0.5rem; }
+
+        /* Icons (SVG replacements) */
+        .icon { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            #ops-dashboard-root {
+                flex-direction: column;
+                margin: 0;
+                border-radius: 0;
+                height: 100vh;
+            }
+            #ops-dashboard-root .sidebar {
+                width: 100%;
+                height: auto;
+            }
+            #ops-dashboard-root .nav-btn {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+            }
+            #ops-dashboard-root .sidebar-footer {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="ops-dashboard-root">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h1 class="sidebar-title">2degrees Dashboard</h1>
+            <p class="sidebar-subtitle">Escalation Protocol</p>
+        </div>
+        <nav>
+            <button class="nav-btn active" onclick="showSection('priority', this)">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                Priority Handling
+            </button>
+            <button class="nav-btn" onclick="showSection('contact', this)">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                Tech Escalation
+            </button>
+            <button class="nav-btn" onclick="showSection('sar', this)">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                SAR &amp; Connexa
+            </button>
+            <button class="nav-btn" onclick="showSection('systems', this)">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                Systems &amp; Troubleshooting
+            </button>
+            <button class="nav-btn" onclick="showSection('teamleader', this)">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+                Team Leader Escalation
+            </button>
+        </nav>
+        <div class="sidebar-footer">
+            <div style="font-size: 0.7rem; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.5rem;">Emergency Contacts</div>
+            <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.25rem;">IT: 0508 225 589</div>
+            <div style="font-size: 0.8rem; color: #cbd5e1;">CVT: 1300 000 288</div>
+        </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+        
+        <!-- SECTION 1: PRIORITY -->
+        <div id="priority" class="section active">
+            <h2>Priority Handling</h2>
+            <p class="section-desc">Protocols for P1, P2, P3 and P4 incidents.</p>
+
+            <div class="grid-2">
+                <!-- High Priority -->
+                <div class="card border-red">
+                    <div class="card-header bg-red-soft">
+                        <h3 class="font-bold text-red" style="margin:0;">Immediate Action (P1 - P3)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="flex-center mb-2">
+                            <span style="background:#fee2e2; color:#dc2626; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; margin-right:10px; font-size:12px;">1</span>
+                            <span class="text-sm"><strong>Call Technician immediately.</strong> Do not wait for email.</span>
+                        </div>
+                        <div class="flex-center mb-2">
+                            <span style="background:#fee2e2; color:#dc2626; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; margin-right:10px; font-size:12px;">2</span>
+                            <span class="text-sm">Email Distribution List (CC the Technician).</span>
+                        </div>
+                        <div class="flex-center">
+                            <span style="background:#fee2e2; color:#dc2626; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; margin-right:10px; font-size:12px;">3</span>
+                            <span class="text-sm">Create Job in Novus &amp; Release STOW.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- P4 Priority -->
+                <div class="card border-blue">
+                    <div class="card-header bg-blue-soft">
+                        <h3 class="font-bold text-blue" style="margin:0;">Time Specific (P4)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="margin-bottom: 1rem;">
+                            <div style="font-size: 0.75rem; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Standard Hours</div>
+                            <div class="text-sm">Follow standard process (Call Immediately).</div>
+                        </div>
+                        <div class="bg-blue-soft" style="padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #dbeafe;">
+                            <div style="font-size: 0.75rem; font-weight: bold; color: #1e40af; text-transform: uppercase;">Overnight (10pm - 6am)</div>
+                            <ul style="margin: 0.25rem 0 0 1.25rem; font-size: 0.875rem; color: #1e3a8a;">
+                                <li>Complete admin tasks immediately.</li>
+                                <li><strong>DO NOT call tech.</strong></li>
+                                <li>Call to notify at 7:00 AM or 8:00 AM.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fallback -->
+            <div style="background-color: #f1f5f9; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; display: flex; gap: 1rem;">
+                <div>
+                    <h4 style="margin: 0 0 0.25rem 0; font-size: 0.9rem;">No Priority Listed?</h4>
+                    <p style="margin: 0; font-size: 0.875rem; color: #475569;">Treat as <strong>P3</strong>. Release immediately. Email 2Degrees to confirm priority.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: CONTACT -->
+        <div id="contact" class="section">
+            <h2>Technician Escalation</h2>
+            <p class="section-desc">Follow the 2Degrees On-Call Sheet hierarchy.</p>
+
+            <div class="card">
+                <div class="card-body">
+                    <div style="position: relative; padding-left: 1rem;">
+                        <!-- Step 1 -->
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="width: 40px; height: 40px; background: #f0fdf4; border: 2px solid #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
+                            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; width: 100%;">
+                                <h4 style="margin: 0; color: #1e293b;">Primary Tech</h4>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #64748b;">Call Technician 1 from the roster.</p>
+                            </div>
+                        </div>
+                        <!-- Step 2 -->
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="width: 40px; height: 40px; background: #f0fdf4; border: 2px solid #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
+                            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; width: 100%;">
+                                <h4 style="margin: 0; color: #1e293b;">Secondary Tech</h4>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #64748b;">If no answer, call Technician 2.</p>
+                            </div>
+                        </div>
+                        <!-- Step 3 -->
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                            <div style="width: 40px; height: 40px; background: #f0fdf4; border: 2px solid #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
+                            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; width: 100%;">
+                                <h4 style="margin: 0; color: #1e293b;">Tertiary Tech</h4>
+                                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #64748b;">If no answer, call Technician 3.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 15 Min Rule -->
+                        <div style="display: flex; gap: 1rem;">
+                            <div style="width: 40px; height: 40px; background: #fef2f2; border: 2px solid #fee2e2; color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">!</div>
+                            <div style="background: #fef2f2; padding: 1.25rem; border-radius: 0.5rem; border: 1px solid #fee2e2; width: 100%;">
+                                <h4 style="margin: 0 0 0.5rem 0; color: #991b1b;">The 15 Minute Rule</h4>
+                                <p style="margin: 0 0 1rem 0; font-size: 0.875rem; color: #b91c1c;">If you cannot reach ANY tech within 15 minutes:</p>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <span style="background: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #991b1b; border: 1px solid #fecaca;">1. Call Supervisor</span>
+                                    <span style="background: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #991b1b; border: 1px solid #fecaca;">2. Call Area Mgr</span>
+                                    <span style="background: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #991b1b; border: 1px solid #fecaca;">3. Call Ops Mgr</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: SAR -->
+        <div id="sar" class="section">
+            <h2>SAR &amp; Connexa</h2>
+            <p class="section-desc">Site Access Request protocols.</p>
+
+            <div class="grid-2">
+                <div class="card border-green">
+                    <div class="card-body">
+                        <h3 class="font-bold text-green" style="margin-top:0;">Site IS in Connexa</h3>
+                        <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Raise SAR</li>
+                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Attach to STOW</li>
+                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Add notes to Work Order</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card" style="border-left: 4px solid #94a3b8;">
+                    <div class="card-body">
+                        <h3 class="font-bold" style="margin-top:0; color: #475569;">Site NOT in Connexa</h3>
+                        <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Verify via Teams Chat</li>
+                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Note in STOW: "Not Connexa Site"</li>
+                        </ul>
+                        <div style="background: #fef2f2; color: #991b1b; padding: 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; border: 1px solid #fecaca;">
+                            Warning: DO NOT create SAR for "nearest site" or use random codes.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: SYSTEMS -->
+        <div id="systems" class="section">
+            <h2>Systems &amp; Troubleshooting</h2>
+            <p class="section-desc">Procedures for system outages and data issues.</p>
+
+            <!-- Novus Down -->
+            <div class="card border-orange">
+                <div class="card-header bg-orange-soft">
+                    <h3 class="font-bold text-orange" style="margin:0;">Novus System Outage</h3>
+                </div>
+                <div class="card-body">
+                    <div class="grid-2">
+                        <div>
+                            <h4 style="margin-top:0;">Operational Process</h4>
+                            <p class="text-sm">If Novus is down, you must switch to <strong>Manual Dispatch</strong>.</p>
+                            <ol class="text-sm" style="padding-left: 1.25rem; color: #334155;">
+                                <li style="margin-bottom: 0.5rem;">Call the technician directly.</li>
+                                <li style="margin-bottom: 0.5rem;">Advise them Novus is down and provide details verbally.</li>
+                                <li style="margin-bottom: 0.5rem;">Send email to DL as normal.</li>
+                                <li style="margin-bottom: 0.5rem;">Log everything in the manual Activity Log.</li>
+                            </ol>
+                        </div>
+                        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                            <h4 style="margin-top:0; font-size: 0.875rem; text-transform: uppercase;">Reporting the Outage</h4>
+                            <div class="text-sm" style="margin-bottom: 0.5rem;">
+                                <span style="display:block; font-size: 0.75rem; color: #64748b;">Primary Contact:</span>
+                                <span style="font-family: monospace; color: #2563eb;">novus@ventia.com</span>
+                            </div>
+                            <div class="text-sm" style="margin-bottom: 0.5rem;">
+                                <span style="display:block; font-size: 0.75rem; color: #64748b;">CC:</span>
+                                <span>Tony Lord, Nivi Sivapalan, Dipti Hewitt</span>
+                            </div>
+                            <div style="border-top: 1px solid #cbd5e1; margin-top: 0.5rem; padding-top: 0.5rem;">
+                                <span style="display:block; font-size: 0.75rem; color: #64748b;">Urgent Escalation (Tony Lord):</span>
+                                <div style="font-size: 0.75rem;"><strong>Business Hours:</strong> Call Tony directly.</div>
+                                <div style="font-size: 0.75rem;"><strong>After Hours:</strong> Text Tony (0401 177 217).</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <!-- Tech Name Missing -->
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="font-bold" style="margin-top:0;">Tech Name Missing in Novus</h3>
+                        <p class="text-sm" style="color: #475569;">Sometimes a region has no tech assigned in the system.</p>
+                        <div style="background: #e0e7ff; padding: 0.75rem; border-radius: 0.25rem; color: #312e81; font-size: 0.875rem; margin: 1rem 0;">
+                            <strong>Action:</strong> Assign the job to the <u>Supervisor</u> or <u>Area Manager</u> for that region.
+                        </div>
+                        <p style="color: #dc2626; font-size: 0.75rem; font-weight: bold;">* Do NOT call the manager for this administrative error. Just assign it.</p>
+                    </div>
+                </div>
+
+                <!-- IT Issues -->
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="font-bold" style="margin-top:0;">IT &amp; Telephony Issues</h3>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <div style="font-weight: bold; font-size: 0.875rem;">SharePoint / Teams / Outlook</div>
+                            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">General IT Support</div>
+                            <div style="background: #f8fafc; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem;">0508 225 589</div>
+                        </div>
+
+                        <div>
+                            <div style="font-weight: bold; font-size: 0.875rem;">PureCloud / Genesys</div>
+                            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">CVT Support</div>
+                            <div style="background: #f8fafc; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem;">
+                                support@cvt.com.au<br>
+                                +61 1300 000 288
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5: TEAM LEADER -->
+        <div id="teamleader" class="section">
+            <h2>Team Leader Escalation</h2>
+            <p class="section-desc">When and how to contact Dipti Hewitt.</p>
+
+            <div style="background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); color: white; padding: 2rem; border-radius: 0.75rem; margin-bottom: 2rem; position: relative; overflow: hidden;">
+                <div style="position: relative; z-index: 2;">
+                    <h3 style="margin: 0; font-size: 1.5rem;">Dipti Hewitt</h3>
+                    <p style="color: #a5b4fc; margin: 0 0 1.5rem 0;">Team Leader</p>
+
+                    <div class="grid-2">
+                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.2);">
+                            <div style="font-weight: bold; margin-bottom: 0.5rem;">Standard Issues</div>
+                            <p style="font-size: 0.875rem; color: #e0e7ff; margin: 0 0 0.5rem 0;">General queries, non-urgent updates.</p>
+                            <div style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.75rem;">Email Dipti (CC Kirsty)</div>
+                        </div>
+
+                        <div style="background: rgba(220, 38, 38, 0.2); padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(220, 38, 38, 0.3);">
+                            <div style="font-weight: bold; margin-bottom: 0.5rem; color: #fecaca;">Urgent / Critical</div>
+                            <p style="font-size: 0.875rem; color: #fee2e2; margin: 0 0 0.5rem 0;">Major outages, blockers, personnel emergencies.</p>
+                            <div style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.75rem;">Call Mobile / Teams Call</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 style="margin-top:0;">Personnel Issues</h4>
+                        <p class="text-sm" style="color: #475569;">If you are sick or running late, email Dipti immediately.</p>
+                        <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">CC: WFM Team</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h4 style="margin-top:0;">Process Blockers</h4>
+                        <p class="text-sm" style="color: #475569;">If you cannot complete a task due to missing access or knowledge gaps.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <h4 style="margin-top:0;">Complaints</h4>
+                        <p class="text-sm" style="color: #475569;">If a technician or client is aggressive or raises a formal complaint.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function showSection(sectionId, btnElement) {
+        // 1. Hide all sections
+        var sections = document.querySelectorAll('#ops-dashboard-root .section');
+        sections.forEach(function(section) {
+            section.classList.remove('active');
+        });
+
+        // 2. Show the selected section
+        var activeSection = document.getElementById(sectionId);
+        if (activeSection) {
+            activeSection.classList.add('active');
+        }
+
+        // 3. Update Nav Buttons
+        var navBtns = document.querySelectorAll('#ops-dashboard-root .nav-btn');
+        navBtns.forEach(function(btn) {
+            btn.classList.remove('active');
+        });
+        
+        // 4. Set active class on clicked button
+        if (btnElement) {
+            btnElement.classList.add('active');
+        }
+    }
+</script>
+
+
+
+</body></html>
