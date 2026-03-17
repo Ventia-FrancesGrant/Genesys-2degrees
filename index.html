@@ -1,556 +1,609 @@
-<!DOCTYPE html><html lang="en"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2degrees Escalation Dashboard</title>
-    <style>
-        /* Global Reset & Variables */
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: #f1f5f9; /* slate-100 background for the whole page */
-            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+<!DOCTYPE html><html><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;"><meta http-equiv="x-dns-prefetch-control" content="off"><script src="https://puc.poecdn.net/authenticated_preview_page/standard.3ef2c256959faf5a756d.js"></script>
+    <meta charset="utf-8">
+    <title>Poe</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://puc.poecdn.net/authenticated_preview_page/disableWebRTC.9710cebe07429a9e8e06.js"></script><meta name="x-poe-allow-downloads" content="true"><meta name="x-poe-datastore-behavior" content="disabled"><script src="https://puc.poecdn.net/authenticated_preview_page/tw.b9024aecac666455e183.js"></script><script src="https://puc.poecdn.net/authenticated_preview_page/deps.faccd16000d314dc16d5.js"></script><script src="https://puc.poecdn.net/authenticated_preview_page/exports.b0f0f482cdeb5302b0b9.js"></script><script src="https://puc.poecdn.net/authenticated_preview_page/renderer.75c73ae6b4235f62945a.js"></script><script>Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _react = require('react'); var _react2 = _interopRequireDefault(_react);
 
-        /* Dashboard Container */
-        #ops-dashboard-root {
-            line-height: 1.5;
-            color: #1e293b; /* slate-800 */
-            background-color: #f8fafc; /* slate-50 */
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            width: 100%;
-            max-width: 1200px;
-            display: flex;
-            min-height: 700px; /* Taller for standalone view */
-            margin: 20px;
-        }
 
-        /* Sidebar Styling */
-        #ops-dashboard-root .sidebar {
-            width: 280px;
-            background-color: #0f172a; /* slate-900 */
-            color: white;
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
-        }
 
-        #ops-dashboard-root .sidebar-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #334155; /* slate-700 */
-        }
 
-        #ops-dashboard-root .sidebar-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: #60a5fa; /* blue-400 */
-            margin: 0;
-        }
 
-        #ops-dashboard-root .sidebar-subtitle {
-            font-size: 0.75rem;
-            color: #94a3b8; /* slate-400 */
-            margin-top: 0.25rem;
-        }
 
-        #ops-dashboard-root .nav-btn {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 0.75rem 1.5rem;
-            background: transparent;
-            border: none;
-            color: #cbd5e1; /* slate-300 */
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.95rem;
-            gap: 12px;
-        }
 
-        #ops-dashboard-root .nav-btn:hover {
-            background-color: #1e293b; /* slate-800 */
-            color: white;
-        }
 
-        #ops-dashboard-root .nav-btn.active {
-            background-color: #2563eb; /* blue-600 */
-            color: white;
-            border-left: 4px solid #60a5fa;
-        }
 
-        #ops-dashboard-root .sidebar-footer {
-            margin-top: auto;
-            padding: 1rem;
-            background-color: #1e293b; /* slate-800 */
-            margin: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #334155;
-        }
 
-        /* Content Area Styling */
-        #ops-dashboard-root .content-area {
-            flex: 1;
-            padding: 2rem;
-            overflow-y: auto;
-            background-color: #f8fafc;
-        }
 
-        #ops-dashboard-root .section {
-            display: none; /* Hidden by default */
-            animation: fadeIn 0.4s ease-out;
-        }
 
-        #ops-dashboard-root .section.active {
-            display: block; /* Show when active */
-        }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
 
-        /* Typography & Cards */
-        #ops-dashboard-root h2 {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-            margin-top: 0;
-        }
 
-        #ops-dashboard-root .section-desc {
-            color: #64748b;
-            margin-bottom: 2rem;
-        }
 
-        #ops-dashboard-root .card {
-            background: white;
-            border-radius: 0.75rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-            margin-bottom: 1.5rem;
-        }
+var _lucidereact = require('lucide-react');
 
-        #ops-dashboard-root .card-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+// Moved OUTSIDE the main component to prevent re-mounting and losing focus
+const ContactRow = ({ title, data, onChange }) => (
+  _react2.default.createElement('div', { className: "bg-white p-3 rounded border border-slate-200 mb-2 shadow-sm"      ,}
+    , _react2.default.createElement('div', { className: "font-semibold text-slate-700 mb-2 text-sm"   ,}, title)
+    , _react2.default.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"    ,}
+      , _react2.default.createElement('input', { 
+        type: "text", placeholder: "Name", value: data.name, 
+        onChange: (e) => onChange({ ...data, name: e.target.value }),
+        className: "w-full text-sm border-slate-300 rounded p-2 border focus:ring-blue-500 focus:border-blue-500"       ,}
+      )
+      , _react2.default.createElement('input', { 
+        type: "datetime-local", value: data.datetime, 
+        onChange: (e) => onChange({ ...data, datetime: e.target.value }),
+        className: "w-full text-sm border-slate-300 rounded p-2 border focus:ring-blue-500 focus:border-blue-500"       ,}
+      )
+      , _react2.default.createElement('select', { 
+        value: data.outcome, 
+        onChange: (e) => onChange({ ...data, outcome: e.target.value }),
+        className: "w-full text-sm border-slate-300 rounded p-2 border focus:ring-blue-500 focus:border-blue-500"       ,}
 
-        #ops-dashboard-root .card-body {
-            padding: 1.5rem;
-        }
+        , _react2.default.createElement('option', { value: "",}, "Select Outcome..." )
+        , _react2.default.createElement('option', { value: "Answered",}, "Answered")
+        , _react2.default.createElement('option', { value: "No answer - left voicemail"    ,}, "No answer - left voicemail"    )
+        , _react2.default.createElement('option', { value: "No answer - voicemail unavailable"    ,}, "No answer - voicemail unavailable"    )
+      )
+      , data.outcome === 'Answered' && (
+        _react2.default.createElement('input', { 
+          type: "text", placeholder: "Agreed Action" , value: data.action, 
+          onChange: (e) => onChange({ ...data, action: e.target.value }),
+          className: "w-full text-sm border-slate-300 rounded p-2 border focus:ring-blue-500 focus:border-blue-500"       ,}
+        )
+      )
+    )
+  )
+);
 
-        #ops-dashboard-root .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-        
-        @media (min-width: 768px) {
-            #ops-dashboard-root .grid-2 {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
+// Moved OUTSIDE the main component for better performance
+const ScriptTask = ({ id, checked, onToggle, children }) => (
+  _react2.default.createElement('label', { className: `flex items-start p-3 mb-3 rounded-lg border cursor-pointer transition-colors ${
+    checked ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200 hover:bg-slate-50'
+  }`,}
+    , _react2.default.createElement('div', { className: "mt-0.5 mr-3" ,}
+      , _react2.default.createElement('input', { 
+        type: "checkbox", 
+        checked: !!checked,
+        onChange: () => onToggle(id),
+        className: "w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500"     ,}
+      )
+    )
+    , _react2.default.createElement('div', { className: `text-sm ${checked ? 'text-slate-500 line-through' : 'text-slate-800'}`,}
+      , children
+    )
+  )
+);
 
-        /* Utility Classes for this component */
-        .text-red { color: #dc2626; }
-        .bg-red-soft { background-color: #fef2f2; }
-        .border-red { border-left: 4px solid #dc2626; }
-        
-        .text-blue { color: #2563eb; }
-        .bg-blue-soft { background-color: #eff6ff; }
-        .border-blue { border-left: 4px solid #2563eb; }
+const GenesysGuidedScript = () => {
+  const [currentPhase, setCurrentPhase] = _react.useState.call(void 0, 1);
+  const [showEscalations, setShowEscalations] = _react.useState.call(void 0, false);
+  const [checkedItems, setCheckedItems] = _react.useState.call(void 0, {});
+  const [isConnexa, setIsConnexa] = _react.useState.call(void 0, null);
+  const [selectedPriority, setSelectedPriority] = _react.useState.call(void 0, null);
 
-        .text-green { color: #16a34a; }
-        .bg-green-soft { background-color: #f0fdf4; }
-        .border-green { border-left: 4px solid #16a34a; }
+  // Notes Generator State
+  const initialNoteState = { name: '', datetime: '', outcome: '', action: '' };
+  const [techNotes, setTechNotes] = _react.useState.call(void 0, {
+    tech1: { ...initialNoteState },
+    tech2: { ...initialNoteState },
+    tech3: { ...initialNoteState }
+  });
+  const [escNotes, setEscNotes] = _react.useState.call(void 0, {
+    supervisor: { ...initialNoteState },
+    areaMgr: { ...initialNoteState },
+    opsMgr: { ...initialNoteState }
+  });
+  const [copiedTech, setCopiedTech] = _react.useState.call(void 0, false);
+  const [copiedEsc, setCopiedEsc] = _react.useState.call(void 0, false);
 
-        .text-orange { color: #ea580c; }
-        .bg-orange-soft { background-color: #fff7ed; }
-        .border-orange { border: 1px solid #fed7aa; }
+  const toggleCheck = (id) => {
+    setCheckedItems(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
-        .font-bold { font-weight: 700; }
-        .text-sm { font-size: 0.875rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
-        .flex-center { display: flex; align-items: center; }
-        .gap-2 { gap: 0.5rem; }
-
-        /* Icons (SVG replacements) */
-        .icon { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            #ops-dashboard-root {
-                flex-direction: column;
-                margin: 0;
-                border-radius: 0;
-                height: 100vh;
-            }
-            #ops-dashboard-root .sidebar {
-                width: 100%;
-                height: auto;
-            }
-            #ops-dashboard-root .nav-btn {
-                padding: 10px 15px;
-                font-size: 0.85rem;
-            }
-            #ops-dashboard-root .sidebar-footer {
-                display: none;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<div id="ops-dashboard-root">
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h1 class="sidebar-title">2degrees Dashboard</h1>
-            <p class="sidebar-subtitle">Escalation Protocol</p>
-        </div>
-        <nav>
-            <button class="nav-btn active" onclick="showSection('priority', this)">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                Priority Handling
-            </button>
-            <button class="nav-btn" onclick="showSection('contact', this)">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                Tech Escalation
-            </button>
-            <button class="nav-btn" onclick="showSection('sar', this)">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                SAR &amp; Connexa
-            </button>
-            <button class="nav-btn" onclick="showSection('systems', this)">
-                <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-                Systems &amp; Troubleshooting
-            </button>
-            <button class="nav-btn" onclick="showSection('teamleader', this)">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
-                Team Leader Escalation
-            </button>
-        </nav>
-        <div class="sidebar-footer">
-            <div style="font-size: 0.7rem; font-weight: bold; color: #94a3b8; text-transform: uppercase; margin-bottom: 0.5rem;">Emergency Contacts</div>
-            <div style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 0.25rem;">IT: 0508 225 589</div>
-            <div style="font-size: 0.8rem; color: #cbd5e1;">CVT: 1300 000 288</div>
-        </div>
-    </div>
-
-    <!-- Content Area -->
-    <div class="content-area">
-        
-        <!-- SECTION 1: PRIORITY -->
-        <div id="priority" class="section active">
-            <h2>Priority Handling</h2>
-            <p class="section-desc">Protocols for P1, P2, P3 and P4 incidents.</p>
-
-            <div class="grid-2">
-                <!-- High Priority -->
-                <div class="card border-red">
-                    <div class="card-header bg-red-soft">
-                        <h3 class="font-bold text-red" style="margin:0;">Immediate Action (P1 - P3)</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="flex-center mb-2">
-                            <span style="background:#fee2e2; color:#dc2626; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; margin-right:10px; font-size:12px;">1</span>
-                            <span class="text-sm"><strong>Call Technician immediately.</strong> Do not wait for email.</span>
-                        </div>
-                        <div class="flex-center mb-2">
-                            <span style="background:#fee2e2; color:#dc2626; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; margin-right:10px; font-size:12px;">2</span>
-                            <span class="text-sm">Email Distribution List (CC the Technician).</span>
-                        </div>
-                        <div class="flex-center">
-                            <span style="background:#fee2e2; color:#dc2626; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; margin-right:10px; font-size:12px;">3</span>
-                            <span class="text-sm">Create Job in Novus &amp; Release STOW.</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- P4 Priority -->
-                <div class="card border-blue">
-                    <div class="card-header bg-blue-soft">
-                        <h3 class="font-bold text-blue" style="margin:0;">Time Specific (P4)</h3>
-                    </div>
-                    <div class="card-body">
-                        <div style="margin-bottom: 1rem;">
-                            <div style="font-size: 0.75rem; font-weight: bold; color: #94a3b8; text-transform: uppercase;">Standard Hours</div>
-                            <div class="text-sm">Follow standard process (Call Immediately).</div>
-                        </div>
-                        <div class="bg-blue-soft" style="padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #dbeafe;">
-                            <div style="font-size: 0.75rem; font-weight: bold; color: #1e40af; text-transform: uppercase;">Overnight (10pm - 6am)</div>
-                            <ul style="margin: 0.25rem 0 0 1.25rem; font-size: 0.875rem; color: #1e3a8a;">
-                                <li>Complete admin tasks immediately.</li>
-                                <li><strong>DO NOT call tech.</strong></li>
-                                <li>Call to notify at 7:00 AM or 8:00 AM.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fallback -->
-            <div style="background-color: #f1f5f9; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; display: flex; gap: 1rem;">
-                <div>
-                    <h4 style="margin: 0 0 0.25rem 0; font-size: 0.9rem;">No Priority Listed?</h4>
-                    <p style="margin: 0; font-size: 0.875rem; color: #475569;">Treat as <strong>P3</strong>. Release immediately. Email 2Degrees to confirm priority.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 2: CONTACT -->
-        <div id="contact" class="section">
-            <h2>Technician Escalation</h2>
-            <p class="section-desc">Follow the 2Degrees On-Call Sheet hierarchy.</p>
-
-            <div class="card">
-                <div class="card-body">
-                    <div style="position: relative; padding-left: 1rem;">
-                        <!-- Step 1 -->
-                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-                            <div style="width: 40px; height: 40px; background: #f0fdf4; border: 2px solid #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">1</div>
-                            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; width: 100%;">
-                                <h4 style="margin: 0; color: #1e293b;">Primary Tech</h4>
-                                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #64748b;">Call Technician 1 from the roster.</p>
-                            </div>
-                        </div>
-                        <!-- Step 2 -->
-                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-                            <div style="width: 40px; height: 40px; background: #f0fdf4; border: 2px solid #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">2</div>
-                            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; width: 100%;">
-                                <h4 style="margin: 0; color: #1e293b;">Secondary Tech</h4>
-                                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #64748b;">If no answer, call Technician 2.</p>
-                            </div>
-                        </div>
-                        <!-- Step 3 -->
-                        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-                            <div style="width: 40px; height: 40px; background: #f0fdf4; border: 2px solid #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">3</div>
-                            <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; width: 100%;">
-                                <h4 style="margin: 0; color: #1e293b;">Tertiary Tech</h4>
-                                <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #64748b;">If no answer, call Technician 3.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- 15 Min Rule -->
-                        <div style="display: flex; gap: 1rem;">
-                            <div style="width: 40px; height: 40px; background: #fef2f2; border: 2px solid #fee2e2; color: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">!</div>
-                            <div style="background: #fef2f2; padding: 1.25rem; border-radius: 0.5rem; border: 1px solid #fee2e2; width: 100%;">
-                                <h4 style="margin: 0 0 0.5rem 0; color: #991b1b;">The 15 Minute Rule</h4>
-                                <p style="margin: 0 0 1rem 0; font-size: 0.875rem; color: #b91c1c;">If you cannot reach ANY tech within 15 minutes:</p>
-                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                    <span style="background: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #991b1b; border: 1px solid #fecaca;">1. Call Supervisor</span>
-                                    <span style="background: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #991b1b; border: 1px solid #fecaca;">2. Call Area Mgr</span>
-                                    <span style="background: white; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; color: #991b1b; border: 1px solid #fecaca;">3. Call Ops Mgr</span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 3: SAR -->
-        <div id="sar" class="section">
-            <h2>SAR &amp; Connexa</h2>
-            <p class="section-desc">Site Access Request protocols.</p>
-
-            <div class="grid-2">
-                <div class="card border-green">
-                    <div class="card-body">
-                        <h3 class="font-bold text-green" style="margin-top:0;">Site IS in Connexa</h3>
-                        <ul style="list-style: none; padding: 0; margin-top: 1rem;">
-                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Raise SAR</li>
-                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Attach to STOW</li>
-                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Add notes to Work Order</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="card" style="border-left: 4px solid #94a3b8;">
-                    <div class="card-body">
-                        <h3 class="font-bold" style="margin-top:0; color: #475569;">Site NOT in Connexa</h3>
-                        <ul style="list-style: none; padding: 0; margin-top: 1rem;">
-                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Verify via Teams Chat</li>
-                            <li style="background: #f8fafc; padding: 8px; margin-bottom: 8px; border-radius: 4px; font-size: 0.875rem;">✔ Note in STOW: "Not Connexa Site"</li>
-                        </ul>
-                        <div style="background: #fef2f2; color: #991b1b; padding: 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; border: 1px solid #fecaca;">
-                            Warning: DO NOT create SAR for "nearest site" or use random codes.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 4: SYSTEMS -->
-        <div id="systems" class="section">
-            <h2>Systems &amp; Troubleshooting</h2>
-            <p class="section-desc">Procedures for system outages and data issues.</p>
-
-            <!-- Novus Down -->
-            <div class="card border-orange">
-                <div class="card-header bg-orange-soft">
-                    <h3 class="font-bold text-orange" style="margin:0;">Novus System Outage</h3>
-                </div>
-                <div class="card-body">
-                    <div class="grid-2">
-                        <div>
-                            <h4 style="margin-top:0;">Operational Process</h4>
-                            <p class="text-sm">If Novus is down, you must switch to <strong>Manual Dispatch</strong>.</p>
-                            <ol class="text-sm" style="padding-left: 1.25rem; color: #334155;">
-                                <li style="margin-bottom: 0.5rem;">Call the technician directly.</li>
-                                <li style="margin-bottom: 0.5rem;">Advise them Novus is down and provide details verbally.</li>
-                                <li style="margin-bottom: 0.5rem;">Send email to DL as normal.</li>
-                                <li style="margin-bottom: 0.5rem;">Log everything in the manual Activity Log.</li>
-                            </ol>
-                        </div>
-                        <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0;">
-                            <h4 style="margin-top:0; font-size: 0.875rem; text-transform: uppercase;">Reporting the Outage</h4>
-                            <div class="text-sm" style="margin-bottom: 0.5rem;">
-                                <span style="display:block; font-size: 0.75rem; color: #64748b;">Primary Contact:</span>
-                                <span style="font-family: monospace; color: #2563eb;">novus@ventia.com</span>
-                            </div>
-                            <div class="text-sm" style="margin-bottom: 0.5rem;">
-                                <span style="display:block; font-size: 0.75rem; color: #64748b;">CC:</span>
-                                <span>Tony Lord, Nivi Sivapalan, Dipti Hewitt</span>
-                            </div>
-                            <div style="border-top: 1px solid #cbd5e1; margin-top: 0.5rem; padding-top: 0.5rem;">
-                                <span style="display:block; font-size: 0.75rem; color: #64748b;">Urgent Escalation (Tony Lord):</span>
-                                <div style="font-size: 0.75rem;"><strong>Business Hours:</strong> Call Tony directly.</div>
-                                <div style="font-size: 0.75rem;"><strong>After Hours:</strong> Text Tony (0401 177 217).</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid-2">
-                <!-- Tech Name Missing -->
-                <div class="card">
-                    <div class="card-body">
-                        <h3 class="font-bold" style="margin-top:0;">Tech Name Missing in Novus</h3>
-                        <p class="text-sm" style="color: #475569;">Sometimes a region has no tech assigned in the system.</p>
-                        <div style="background: #e0e7ff; padding: 0.75rem; border-radius: 0.25rem; color: #312e81; font-size: 0.875rem; margin: 1rem 0;">
-                            <strong>Action:</strong> Assign the job to the <u>Supervisor</u> or <u>Area Manager</u> for that region.
-                        </div>
-                        <p style="color: #dc2626; font-size: 0.75rem; font-weight: bold;">* Do NOT call the manager for this administrative error. Just assign it.</p>
-                    </div>
-                </div>
-
-                <!-- IT Issues -->
-                <div class="card">
-                    <div class="card-body">
-                        <h3 class="font-bold" style="margin-top:0;">IT &amp; Telephony Issues</h3>
-                        
-                        <div style="margin-bottom: 1rem;">
-                            <div style="font-weight: bold; font-size: 0.875rem;">SharePoint / Teams / Outlook</div>
-                            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">General IT Support</div>
-                            <div style="background: #f8fafc; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem;">0508 225 589</div>
-                        </div>
-
-                        <div>
-                            <div style="font-weight: bold; font-size: 0.875rem;">PureCloud / Genesys</div>
-                            <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">CVT Support</div>
-                            <div style="background: #f8fafc; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem;">
-                                support@cvt.com.au<br>
-                                +61 1300 000 288
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECTION 5: TEAM LEADER -->
-        <div id="teamleader" class="section">
-            <h2>Team Leader Escalation</h2>
-            <p class="section-desc">When and how to contact Dipti Hewitt.</p>
-
-            <div style="background: linear-gradient(135deg, #312e81 0%, #4338ca 100%); color: white; padding: 2rem; border-radius: 0.75rem; margin-bottom: 2rem; position: relative; overflow: hidden;">
-                <div style="position: relative; z-index: 2;">
-                    <h3 style="margin: 0; font-size: 1.5rem;">Dipti Hewitt</h3>
-                    <p style="color: #a5b4fc; margin: 0 0 1.5rem 0;">Team Leader</p>
-
-                    <div class="grid-2">
-                        <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.2);">
-                            <div style="font-weight: bold; margin-bottom: 0.5rem;">Standard Issues</div>
-                            <p style="font-size: 0.875rem; color: #e0e7ff; margin: 0 0 0.5rem 0;">General queries, non-urgent updates.</p>
-                            <div style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.75rem;">Email Dipti (CC Kirsty)</div>
-                        </div>
-
-                        <div style="background: rgba(220, 38, 38, 0.2); padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(220, 38, 38, 0.3);">
-                            <div style="font-weight: bold; margin-bottom: 0.5rem; color: #fecaca;">Urgent / Critical</div>
-                            <p style="font-size: 0.875rem; color: #fee2e2; margin: 0 0 0.5rem 0;">Major outages, blockers, personnel emergencies.</p>
-                            <div style="background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.75rem;">Call Mobile / Teams Call</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid-2" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 style="margin-top:0;">Personnel Issues</h4>
-                        <p class="text-sm" style="color: #475569;">If you are sick or running late, email Dipti immediately.</p>
-                        <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.5rem;">CC: WFM Team</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <h4 style="margin-top:0;">Process Blockers</h4>
-                        <p class="text-sm" style="color: #475569;">If you cannot complete a task due to missing access or knowledge gaps.</p>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-body">
-                        <h4 style="margin-top:0;">Complaints</h4>
-                        <p class="text-sm" style="color: #475569;">If a technician or client is aggressive or raises a formal complaint.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<script>
-    function showSection(sectionId, btnElement) {
-        // 1. Hide all sections
-        var sections = document.querySelectorAll('#ops-dashboard-root .section');
-        sections.forEach(function(section) {
-            section.classList.remove('active');
-        });
-
-        // 2. Show the selected section
-        var activeSection = document.getElementById(sectionId);
-        if (activeSection) {
-            activeSection.classList.add('active');
-        }
-
-        // 3. Update Nav Buttons
-        var navBtns = document.querySelectorAll('#ops-dashboard-root .nav-btn');
-        navBtns.forEach(function(btn) {
-            btn.classList.remove('active');
-        });
-        
-        // 4. Set active class on clicked button
-        if (btnElement) {
-            btnElement.classList.add('active');
-        }
+  const nextPhase = () => {
+    if (currentPhase < 6 && canProceedToNextPhase()) {
+      setCurrentPhase(prev => prev + 1);
+      window.scrollTo(0, 0);
     }
-</script>
+  };
 
+  const prevPhase = () => {
+    if (currentPhase > 1) setCurrentPhase(prev => prev - 1);
+    window.scrollTo(0, 0);
+  };
 
+  const resetScript = () => {
+    setCurrentPhase(1);
+    setCheckedItems({});
+    setIsConnexa(null);
+    setSelectedPriority(null);
+    setTechNotes({ tech1: { ...initialNoteState }, tech2: { ...initialNoteState }, tech3: { ...initialNoteState } });
+    setEscNotes({ supervisor: { ...initialNoteState }, areaMgr: { ...initialNoteState }, opsMgr: { ...initialNoteState } });
+    window.scrollTo(0,0);
+  };
 
-</body></html>
+  const canProceedToNextPhase = () => {
+    if (currentPhase === 1) return checkedItems['p1_1'] && checkedItems['p1_2'] && checkedItems['p1_3'] && checkedItems['p1_4'];
+    if (currentPhase === 2) {
+      if (!checkedItems['p2_1'] || isConnexa === null) return false;
+      if (isConnexa === true) return checkedItems['p2_2'] && checkedItems['p2_3'] && checkedItems['p2_4'];
+      if (isConnexa === false) return checkedItems['p2_no_connexa'];
+    }
+    if (currentPhase === 3) return checkedItems['p3_1'] && checkedItems['p3_2'] && checkedItems['p3_3'];
+    if (currentPhase === 4) {
+      if (!selectedPriority) return false;
+      if (selectedPriority === 'P1_P2') return checkedItems['p4_action_p1'];
+      if (selectedPriority === 'P3_P4') return checkedItems['p4_action_p3'];
+    }
+    if (currentPhase === 5) return checkedItems['p5_1'] && checkedItems['p5_2'];
+    return true;
+  };
+
+  const phases = [
+    { id: 1, title: 'Triage & Assessment', icon: _lucidereact.AlertCircle },
+    { id: 2, title: 'Site Access (SAR)', icon: _lucidereact.ShieldAlert },
+    { id: 3, title: 'Novus - Create WO', icon: _lucidereact.Database },
+    { id: 4, title: 'Technician Contact', icon: _lucidereact.PhoneCall },
+    { id: 5, title: 'Novus - STOW', icon: _lucidereact.Database },
+    { id: 6, title: 'Wrap Up & Comms', icon: _lucidereact.CheckSquare },
+  ];
+
+  const generateNotesText = (notesObj, labels) => {
+    return Object.keys(notesObj).map(key => {
+      const n = notesObj[key];
+      if (!n.name && !n.outcome) return '';
+      let str = `${labels[key]}: ${n.name || 'N/A'} | ${n.datetime ? new Date(n.datetime).toLocaleString() : 'N/A'} | ${n.outcome}`;
+      if (n.outcome === 'Answered' && n.action) str += ` | Action: ${n.action}`;
+      return str;
+    }).filter(Boolean).join('\n');
+  };
+
+  const copyToClipboard = (text, type) => {
+    navigator.clipboard.writeText(text);
+    if (type === 'tech') {
+      setCopiedTech(true);
+      setTimeout(() => setCopiedTech(false), 2000);
+    } else {
+      setCopiedEsc(true);
+      setTimeout(() => setCopiedEsc(false), 2000);
+    }
+  };
+
+  return (
+    _react2.default.createElement('div', { className: "min-h-screen bg-slate-100 flex flex-col font-sans"    ,}
+
+      , _react2.default.createElement('header', { className: "bg-slate-900 text-white p-4 flex justify-between items-center shadow-md shrink-0"       ,}
+        , _react2.default.createElement('div', { className: "flex items-center space-x-4"  ,}
+          , _react2.default.createElement('div', { className: "bg-blue-600 text-white font-bold px-3 py-1 rounded"     ,}, "2degrees NOC" )
+          , _react2.default.createElement('h1', { className: "text-lg font-semibold hidden sm:block"   ,}, "End-to-End Dispatch Script"  )
+        )
+        , _react2.default.createElement('div', { className: "flex items-center space-x-3"  ,}
+          , _react2.default.createElement('button', { 
+            onClick: () => setShowEscalations(!showEscalations),
+            className: `flex items-center px-4 py-2 rounded text-sm font-medium transition-colors ${
+              showEscalations ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+            }`,}
+
+            , _react2.default.createElement(_lucidereact.AlertTriangle, { size: 16, className: "mr-2",} )
+            , showEscalations ? 'Close Escalations' : 'Escalations & Outages'
+          )
+        )
+      )
+
+      , _react2.default.createElement('div', { className: "flex flex-1 overflow-hidden"  ,}
+        , _react2.default.createElement('div', { className: "flex-1 overflow-y-auto p-4 md:p-6 lg:p-8"    ,}
+          , _react2.default.createElement('div', { className: "max-w-4xl mx-auto" ,}
+
+            , _react2.default.createElement('div', { className: "mb-8 hidden md:flex items-center justify-between relative"     ,}
+              , _react2.default.createElement('div', { className: "absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 -z-10"        ,})
+              , _react2.default.createElement('div', { className: "absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-blue-600 -z-10 transition-all duration-300"         , 
+                   style: { width: `${((currentPhase - 1) / 5) * 100}%` },})
+
+              , phases.map((phase) => {
+                const Icon = phase.icon;
+                const isActive = currentPhase === phase.id;
+                const isPast = currentPhase > phase.id;
+                
+                return (
+                  _react2.default.createElement('div', { key: phase.id, className: "flex flex-col items-center bg-slate-100 px-2"    ,}
+                    , _react2.default.createElement('div', { className: `w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
+                      isActive ? 'bg-blue-600 border-blue-600 text-white' : 
+                      isPast ? 'bg-green-500 border-green-500 text-white' : 
+                      'bg-white border-slate-300 text-slate-400'
+                    }`,}
+                      , _react2.default.createElement(Icon, { size: 20,} )
+                    )
+                    , _react2.default.createElement('span', { className: `text-xs font-medium mt-2 ${isActive ? 'text-blue-700' : isPast ? 'text-green-600' : 'text-slate-500'}`,}
+                      , phase.title
+                    )
+                  )
+                );
+              })
+            )
+
+            , _react2.default.createElement('div', { className: "bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"     ,}
+
+              , _react2.default.createElement('div', { className: "bg-slate-50 border-b border-slate-200 p-6 flex items-center"     ,}
+                , _react2.default.createElement('div', { className: "bg-blue-100 text-blue-700 w-12 h-12 rounded-lg flex items-center justify-center mr-4 shrink-0"         ,}
+                  , _react2.default.createElement(phases[currentPhase - 1].icon, { size: 24 })
+                )
+                , _react2.default.createElement('div', null
+                  , _react2.default.createElement('h2', { className: "text-xl font-bold text-slate-800"  ,}, "Phase " , currentPhase, ": " , phases[currentPhase - 1].title)
+                  , _react2.default.createElement('p', { className: "text-sm text-slate-500 mt-1"  ,}, "Select all required checkboxes below to unlock the next phase."         )
+                )
+              )
+
+              , _react2.default.createElement('div', { className: "p-6",}
+
+                /* PHASE 1: TRIAGE */
+                , currentPhase === 1 && (
+                  _react2.default.createElement('div', { className: "space-y-6 animate-in fade-in duration-300"   ,}
+                    , _react2.default.createElement('div', { className: "bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg"    ,}
+                      , _react2.default.createElement('p', { className: "text-sm text-blue-800 font-medium"  ,}
+                        , _react2.default.createElement('strong', null, "Goal:"), " Review the incoming Genesys email, identify key details, and locate the correct technician."
+                      )
+                    )
+                    , _react2.default.createElement('div', { className: "space-y-2",}
+                      , _react2.default.createElement(ScriptTask, { id: "p1_1", checked: checkedItems['p1_1'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Review Email:" ), " Ensure the SNOC email status is \"Open\"."       )
+                      , _react2.default.createElement(ScriptTask, { id: "p1_2", checked: checkedItems['p1_2'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Identify Details:" ), " Locate the "   , _react2.default.createElement('strong', null, "Site Code" ), ", " , _react2.default.createElement('strong', null, "Fault Description" ), ", and "  , _react2.default.createElement('strong', null, "Priority (P1-P4)" ), " in the email body."    )
+                      , _react2.default.createElement(ScriptTask, { id: "p1_3", checked: checkedItems['p1_3'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Open SharePoint:" ), " Open the "   , _react2.default.createElement('a', { href: "#", className: "text-blue-600 underline font-medium"  ,}, "2degrees On-Call Sheet"  ), ".")
+                      , _react2.default.createElement(ScriptTask, { id: "p1_4", checked: checkedItems['p1_4'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Find Technician:" ), " Locate the correct Primary Technician for the region associated with the Site Code."             )
+                    )
+                    , _react2.default.createElement('div', { className: "bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start"      ,}
+                      , _react2.default.createElement(_lucidereact.Info, { className: "text-yellow-600 mr-3 shrink-0 mt-0.5"   , size: 20,} )
+                      , _react2.default.createElement('div', { className: "text-sm text-yellow-800" ,}
+                        , _react2.default.createElement('strong', null, "Missing Details?" ), " If "  , _react2.default.createElement('strong', null, "any"), " details are missing (Site Code, Priority, Fault Description), call the 2degrees SNOC to confirm at "                , _react2.default.createElement('strong', null, "0508 022 662"  ), "."
+                      )
+                    )
+                  )
+                )
+
+                /* PHASE 2: CONNEXA / SAR */
+                , currentPhase === 2 && (
+                  _react2.default.createElement('div', { className: "space-y-6 animate-in fade-in duration-300"   ,}
+                    , _react2.default.createElement('div', { className: "bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6"     ,}
+                      , _react2.default.createElement('h3', { className: "font-bold text-blue-800 mb-2"  ,}, "Check Connexa TMP Site"   )
+                      , _react2.default.createElement('p', { className: "text-sm text-blue-900 mb-4"  ,}, "You must log in to the Connexa TMP site each time, search the site, and confirm if it is visible. If it is visible, it is a Connexa site and requires a SAR."                                )
+                      , _react2.default.createElement('a', { href: "https://sitetracker-connexa.my.site.com/s/", target: "_blank", rel: "noreferrer", className: "inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"          ,}, "Open Connexa Portal "
+                           , _react2.default.createElement(_lucidereact.ExternalLink, { size: 16, className: "ml-2",} )
+                      )
+                    )
+                    , _react2.default.createElement('div', { className: "bg-yellow-50 border border-yellow-200 rounded p-4 mb-4 text-sm text-yellow-800 flex items-start"         ,}
+                      , _react2.default.createElement(_lucidereact.AlertTriangle, { size: 20, className: "mr-3 shrink-0 mt-0.5"  ,} )
+                      , _react2.default.createElement('div', null, _react2.default.createElement('strong', null, "Important:"), " Make sure the Site Code is entered correctly. It MUST include the hyphen (e.g., "               , _react2.default.createElement('code', null, "060-078"), "). If this is missing, it won't locate it in TMP."          )
+                    )
+                    , _react2.default.createElement('div', { className: "space-y-2 mb-6" ,}
+                      , _react2.default.createElement(ScriptTask, { id: "p2_1", checked: checkedItems['p2_1'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Search Site:" ), " Enter site code with hyphen (format: "       , _react2.default.createElement('code', null, "060-078"), ").")
+                    )
+                    , _react2.default.createElement('div', { className: `p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between mb-6 transition-colors ${isConnexa !== null ? 'bg-slate-50 border border-slate-200' : 'bg-slate-100 border border-transparent'}`,}
+                      , _react2.default.createElement('span', { className: "font-bold text-slate-800 mb-3 sm:mb-0"   ,}, "Is the site visible in Connexa?"     )
+                      , _react2.default.createElement('div', { className: "flex space-x-3" ,}
+                        , _react2.default.createElement('button', { onClick: () => setIsConnexa(true), className: `px-6 py-2 rounded font-medium text-sm transition-all ${isConnexa === true ? 'bg-green-600 text-white shadow-md ring-2 ring-green-600 ring-offset-2' : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'}`,}, "Yes")
+                        , _react2.default.createElement('button', { onClick: () => setIsConnexa(false), className: `px-6 py-2 rounded font-medium text-sm transition-all ${isConnexa === false ? 'bg-slate-700 text-white shadow-md ring-2 ring-slate-700 ring-offset-2' : 'bg-white text-slate-700 border border-slate-300 hover:bg-slate-50'}`,}, "No")
+                      )
+                    )
+
+                    , isConnexa === true && (
+                      _react2.default.createElement('div', { className: "animate-in fade-in slide-in-from-top-4 duration-300"   ,}
+                        , _react2.default.createElement('h3', { className: "font-bold text-green-800 mb-3 flex items-center"    ,}, _react2.default.createElement(_lucidereact.CheckSquare, { size: 18, className: "mr-2",} ), " Raise SAR in Connexa Portal:"     )
+                        , _react2.default.createElement('div', { className: "space-y-2",}
+                          , _react2.default.createElement(ScriptTask, { id: "p2_2", checked: checkedItems['p2_2'], onToggle: toggleCheck,}
+                            , _react2.default.createElement('strong', null, "Fill Details:" ), _react2.default.createElement('br', null)
+                            , _react2.default.createElement('span', { className: "text-xs text-slate-600 ml-4 block mt-1"    ,}, "• Outage Required: No"
+                                 , _react2.default.createElement('br', null), "• " , _react2.default.createElement('strong', { className: "text-red-600",}, "Reason: MUST ALWAYS BE Reactive Maintenance"     ), _react2.default.createElement('br', null), "• Sub Reason: Active"   , _react2.default.createElement('br', null), "• Impact: No | Start: Today | End: 1 Month Later | Phone: 0800 233 475"
+                            )
+                          )
+                          , _react2.default.createElement(ScriptTask, { id: "p2_3", checked: checkedItems['p2_3'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Assign Resource:" ), " Enter the name of the technician who will be assigned to the work."             )
+                          , _react2.default.createElement(ScriptTask, { id: "p2_4", checked: checkedItems['p2_4'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Submit & Save:"  ), " Select \"Permits Not Required\", Submit, and download the confirmation email."          )
+                        )
+                      )
+                    )
+
+                    , isConnexa === false && (
+                      _react2.default.createElement('div', { className: "animate-in fade-in slide-in-from-top-4 duration-300"   ,}
+                        , _react2.default.createElement('div', { className: "bg-slate-50 border border-slate-300 rounded-lg p-5 mb-4"     ,}
+                          , _react2.default.createElement('h4', { className: "font-bold text-slate-800 mb-2 flex items-center"    ,}, _react2.default.createElement(_lucidereact.Info, { size: 18, className: "mr-2 text-slate-600" ,} ), " Non-Connexa Site Instructions"   )
+                          , _react2.default.createElement('ul', { className: "list-disc list-inside text-sm text-slate-700 space-y-2 mt-3"     ,}
+                            , _react2.default.createElement('li', null, "Add note in STOW: "    , _react2.default.createElement('strong', null, "\"Not Connexa Site\""  ), ".")
+                            , _react2.default.createElement('li', { className: "text-red-600 font-medium" ,}, "Do not raise a SAR for the nearest site."        )
+                          )
+                        )
+                        , _react2.default.createElement(ScriptTask, { id: "p2_no_connexa", checked: checkedItems['p2_no_connexa'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Acknowledge:"), " I have noted \"Not Connexa Site\" in STOW and will not raise a SAR."              )
+                      )
+                    )
+                  )
+                )
+
+                /* PHASE 3: NOVUS PART 1 */
+                , currentPhase === 3 && (
+                  _react2.default.createElement('div', { className: "space-y-6 animate-in fade-in duration-300"   ,}
+                    , _react2.default.createElement('div', { className: "bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6"     ,}
+                      , _react2.default.createElement('h3', { className: "font-bold text-blue-800 mb-2"  ,}, "Open Novus System (Part 1)"    )
+                      , _react2.default.createElement('p', { className: "text-sm text-blue-900 mb-4"  ,}, "Log in to the Novus system to create and update the work order."            )
+                      , _react2.default.createElement('a', { href: "https://apex.ventia.com/ords/r/utility/home/home?session=410142913205613", target: "_blank", rel: "noreferrer", className: "inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition-colors"          ,}, "Open Novus "
+                          , _react2.default.createElement(_lucidereact.ExternalLink, { size: 16, className: "ml-2",} )
+                      )
+                    )
+                    , _react2.default.createElement('div', { className: "space-y-2",}
+                      , _react2.default.createElement(ScriptTask, { id: "p3_1", checked: checkedItems['p3_1'], onToggle: toggleCheck,}
+                        , _react2.default.createElement('strong', null, "Create Work Order:"  ), _react2.default.createElement('br', null)
+                        , _react2.default.createElement('span', { className: "text-xs text-slate-600 ml-4 block mt-2 space-y-1"     ,}, "• "
+                           , _react2.default.createElement('strong', null, "Contract:"), " NZ - 2degrees"   , _react2.default.createElement('br', null), "• " , _react2.default.createElement('strong', null, "Work order Type:"  ), " Fault (w)"  , _react2.default.createElement('br', null), "• " , _react2.default.createElement('strong', null, "Client Ref Format:"  ), " " , _react2.default.createElement('code', { className: "text-red-600 bg-red-50 px-1"  ,}, "Region-Site-TASK#-INC#"), _react2.default.createElement('br', null), "• " , _react2.default.createElement('strong', null, "Select:"), " Service Area & Contract Region"     , _react2.default.createElement('br', null), "• " , _react2.default.createElement('strong', null, "Contact Person:" ), " Ventia Supervisor"
+                        )
+                      )
+                      , _react2.default.createElement(ScriptTask, { id: "p3_2", checked: checkedItems['p3_2'], onToggle: toggleCheck,}
+                        , _react2.default.createElement('strong', null, "Upload BOQ:" ), _react2.default.createElement('br', null)
+                        , _react2.default.createElement('span', { className: "text-xs text-slate-600 ml-4 block mt-1"    ,}, "• Download "
+                            , _react2.default.createElement('a', { href: "#", className: "text-blue-600 underline" ,}, "2D VOC Novus SORs.csv"   ), " from SharePoint."  , _react2.default.createElement('br', null), "• Clear Cache -> Upload -> Validate -> Import."
+                        )
+                      )
+                      , _react2.default.createElement(ScriptTask, { id: "p3_3", checked: checkedItems['p3_3'], onToggle: toggleCheck,}
+                        , _react2.default.createElement('strong', null, "Update Work Order:"  ), _react2.default.createElement('br', null)
+                        , _react2.default.createElement('span', { className: "text-xs text-slate-600 ml-4 block mt-2 space-y-1"     ,}, "• "
+                           , _react2.default.createElement('strong', null, "Address:"), " Address. Can be left blank if not provided."        , _react2.default.createElement('br', null), "• " , _react2.default.createElement('strong', null, "Description:"), " fault description from 2degrees"    , _react2.default.createElement('br', null), "• " , _react2.default.createElement('strong', null, "Priority:"), " priority confirmed from 2degrees"    , _react2.default.createElement('br', null), "• " , _react2.default.createElement('strong', null, "Field Engineer contact:"  ), " 2degrees technician name. Can be left blank if not provided."          , _react2.default.createElement('br', null), "• " , _react2.default.createElement('strong', null, "Fault received time:"  ), " time email received in Genesys"
+                        )
+                      )
+                    )
+                  )
+                )
+
+                /* PHASE 4: CONTACT */
+                , currentPhase === 4 && (
+                  _react2.default.createElement('div', { className: "space-y-6 animate-in fade-in duration-300"   ,}
+                    , _react2.default.createElement('div', { className: "mb-6",}
+                      , _react2.default.createElement('h3', { className: "font-bold text-slate-800 mb-3"  ,}, "Select Fault Priority:"  )
+                      , _react2.default.createElement('div', { className: "flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4"     ,}
+                        , _react2.default.createElement('button', { onClick: () => setSelectedPriority('P1_P2'), className: `flex-1 flex items-center justify-center p-4 rounded-lg border-2 transition-all ${selectedPriority === 'P1_P2' ? 'bg-red-50 border-red-500 text-red-800 shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`,}
+                          , _react2.default.createElement(_lucidereact.AlertCircle, { size: 20, className: "mr-2",} ), " " , _react2.default.createElement('span', { className: "font-bold",}, "P1 & P2"  )
+                        )
+                        , _react2.default.createElement('button', { onClick: () => setSelectedPriority('P3_P4'), className: `flex-1 flex items-center justify-center p-4 rounded-lg border-2 transition-all ${selectedPriority === 'P3_P4' ? 'bg-blue-50 border-blue-500 text-blue-800 shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`,}
+                          , _react2.default.createElement(_lucidereact.Clock, { size: 20, className: "mr-2",} ), " " , _react2.default.createElement('span', { className: "font-bold",}, "P3 & P4"  )
+                        )
+                      )
+                    )
+
+                    , selectedPriority === 'P1_P2' && (
+                      _react2.default.createElement('div', { className: "bg-slate-50 border border-slate-200 rounded-lg p-5 animate-in fade-in slide-in-from-top-4 duration-300"        ,}
+                        , _react2.default.createElement('div', { className: "mb-4 text-sm text-slate-700"  ,}, _react2.default.createElement('strong', null, "Call Technician immediately."  ), " Required during both business and after hours."       )
+
+                        , _react2.default.createElement('h3', { className: "font-bold text-slate-800 mb-3"  ,}, "Contact Hierarchy Script:"  )
+                        , _react2.default.createElement('ul', { className: "list-decimal list-inside space-y-2 text-sm text-slate-700 mb-6"     ,}
+                          , _react2.default.createElement('li', null, _react2.default.createElement('strong', null, "Call Primary Tech:"  ), " \"Hi, this is Ventia VOC. We have a P[X] fault at site [Site Code].\""              )
+                          , _react2.default.createElement('li', null, _react2.default.createElement('strong', null, "If no answer:"  ), " Call Secondary Tech from roster."     )
+                          , _react2.default.createElement('li', null, _react2.default.createElement('strong', null, "If no answer:"  ), " Call Tertiary Tech from roster."     )
+                        )
+
+                        /* TECHNICIAN NOTES GENERATOR */
+                        , _react2.default.createElement('div', { className: "bg-slate-100 border border-slate-300 rounded-lg p-4 mb-6"     ,}
+                          , _react2.default.createElement('h4', { className: "font-bold text-slate-800 mb-3 flex items-center"    ,}
+                            , _react2.default.createElement(_lucidereact.PhoneCall, { size: 18, className: "mr-2",} ), " Technician Contact Notes Generator"
+                          )
+                          , _react2.default.createElement(ContactRow, { title: "1st Technician" , data: techNotes.tech1, onChange: (data) => setTechNotes({...techNotes, tech1: data}),} )
+                          , _react2.default.createElement(ContactRow, { title: "2nd Technician" , data: techNotes.tech2, onChange: (data) => setTechNotes({...techNotes, tech2: data}),} )
+                          , _react2.default.createElement(ContactRow, { title: "3rd Technician" , data: techNotes.tech3, onChange: (data) => setTechNotes({...techNotes, tech3: data}),} )
+
+                          , _react2.default.createElement('div', { className: "mt-4",}
+                            , _react2.default.createElement('div', { className: "flex justify-between items-center mb-2"   ,}
+                              , _react2.default.createElement('span', { className: "text-xs font-bold text-slate-500 uppercase"   ,}, "Generated Notes" )
+                              , _react2.default.createElement('button', { 
+                                onClick: () => copyToClipboard(generateNotesText(techNotes, {tech1: '1st Tech', tech2: '2nd Tech', tech3: '3rd Tech'}), 'tech'),
+                                className: "flex items-center text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 transition-colors"         ,}
+
+                                , copiedTech ? _react2.default.createElement(_lucidereact.Check, { size: 14, className: "mr-1",} ) : _react2.default.createElement(_lucidereact.Copy, { size: 14, className: "mr-1",} )
+                                , copiedTech ? 'Copied!' : 'Copy Notes'
+                              )
+                            )
+                            , _react2.default.createElement('textarea', { 
+                              readOnly: true, 
+                              value: generateNotesText(techNotes, {tech1: '1st Tech', tech2: '2nd Tech', tech3: '3rd Tech'}),
+                              className: "w-full h-24 text-sm bg-white border border-slate-300 rounded p-2 text-slate-700"        ,
+                              placeholder: "Notes will appear here as you fill out the fields above..."          ,}
+                            )
+                          )
+                        )
+
+                        , _react2.default.createElement('div', { className: "bg-red-50 border border-red-200 rounded-lg p-4 mb-6"     ,}
+                          , _react2.default.createElement('h4', { className: "font-bold text-red-800 mb-2 flex items-center"    ,}
+                            , _react2.default.createElement(_lucidereact.AlertTriangle, { size: 18, className: "mr-2",} ), " The 15 Minute Rule"
+                          )
+                          , _react2.default.createElement('p', { className: "text-sm text-red-700 mb-3"  ,}, "If you cannot reach ANY tech within 15 minutes, escalate immediately in this exact order:"              )
+                          , _react2.default.createElement('div', { className: "flex flex-col sm:flex-row gap-2 mb-3"    ,}
+                            , _react2.default.createElement('span', { className: "bg-white px-3 py-2 rounded text-sm font-bold text-red-800 border border-red-200 text-center"         ,}, "1. Call Supervisor"  )
+                            , _react2.default.createElement('span', { className: "bg-white px-3 py-2 rounded text-sm font-bold text-red-800 border border-red-200 text-center"         ,}, "2. Call Area Mgr"   )
+                            , _react2.default.createElement('span', { className: "bg-white px-3 py-2 rounded text-sm font-bold text-red-800 border border-red-200 text-center"         ,}, "3. Call Ops Mgr"   )
+                          )
+                          , _react2.default.createElement('p', { className: "text-xs text-red-800 font-bold underline mb-4"    ,}, "Note: Do NOT skip ahead to the Ops Manager. You must always call the Supervisor, Area Manager, and then Operations Manager in order."
+
+                          )
+
+                          /* ESCALATION NOTES GENERATOR */
+                          , _react2.default.createElement('div', { className: "bg-white border border-red-200 rounded-lg p-4"    ,}
+                            , _react2.default.createElement('h4', { className: "font-bold text-red-800 mb-3 flex items-center"    ,}
+                              , _react2.default.createElement(_lucidereact.AlertTriangle, { size: 18, className: "mr-2",} ), " Escalation Notes Generator"
+                            )
+                            , _react2.default.createElement(ContactRow, { title: "Supervisor", data: escNotes.supervisor, onChange: (data) => setEscNotes({...escNotes, supervisor: data}),} )
+                            , _react2.default.createElement(ContactRow, { title: "Area Manager" , data: escNotes.areaMgr, onChange: (data) => setEscNotes({...escNotes, areaMgr: data}),} )
+                            , _react2.default.createElement(ContactRow, { title: "Operations Manager" , data: escNotes.opsMgr, onChange: (data) => setEscNotes({...escNotes, opsMgr: data}),} )
+
+                            , _react2.default.createElement('div', { className: "mt-4",}
+                              , _react2.default.createElement('div', { className: "flex justify-between items-center mb-2"   ,}
+                                , _react2.default.createElement('span', { className: "text-xs font-bold text-slate-500 uppercase"   ,}, "Generated Escalation Notes"  )
+                                , _react2.default.createElement('button', { 
+                                  onClick: () => copyToClipboard(generateNotesText(escNotes, {supervisor: 'Supervisor', areaMgr: 'Area Manager', opsMgr: 'Operations Manager'}), 'esc'),
+                                  className: "flex items-center text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 transition-colors"         ,}
+
+                                  , copiedEsc ? _react2.default.createElement(_lucidereact.Check, { size: 14, className: "mr-1",} ) : _react2.default.createElement(_lucidereact.Copy, { size: 14, className: "mr-1",} )
+                                  , copiedEsc ? 'Copied!' : 'Copy Notes'
+                                )
+                              )
+                              , _react2.default.createElement('textarea', { 
+                                readOnly: true, 
+                                value: generateNotesText(escNotes, {supervisor: 'Supervisor', areaMgr: 'Area Manager', opsMgr: 'Operations Manager'}),
+                                className: "w-full h-24 text-sm bg-slate-50 border border-slate-300 rounded p-2 text-slate-700"        ,
+                                placeholder: "Escalation notes will appear here..."    ,}
+                              )
+                            )
+                          )
+                        )
+
+                        , _react2.default.createElement(ScriptTask, { id: "p4_action_p1", checked: checkedItems['p4_action_p1'], onToggle: toggleCheck,}
+                          , _react2.default.createElement('strong', null, "Action Completed:" ), " I have successfully contacted a technician OR followed the full escalation process."
+                        )
+                      )
+                    )
+
+                    , selectedPriority === 'P3_P4' && (
+                      _react2.default.createElement('div', { className: "bg-slate-50 border border-slate-200 rounded-lg p-5 animate-in fade-in slide-in-from-top-4 duration-300"        ,}
+                        , _react2.default.createElement('div', { className: "mb-4 text-sm text-slate-700"  ,}, _react2.default.createElement('strong', null, "No call required."  ), " Can be emailed through directly. Skip hierarchy below."        )
+                        , _react2.default.createElement(ScriptTask, { id: "p4_action_p3", checked: checkedItems['p4_action_p3'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Action Completed:" ), " I have prepared the details to be emailed directly to the technician group."             )
+                      )
+                    )
+                  )
+                )
+
+                /* PHASE 5: NOVUS PART 2 */
+                , currentPhase === 5 && (
+                  _react2.default.createElement('div', { className: "space-y-6 animate-in fade-in duration-300"   ,}
+                    , _react2.default.createElement('div', { className: "bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6"     ,}
+                      , _react2.default.createElement('p', { className: "text-sm text-blue-800 font-medium"  ,}, _react2.default.createElement('strong', null, "Novus System (Part 2):"   ), " Now that the technician has been contacted, finalize the STOW and attachments."            )
+                    )
+                    , _react2.default.createElement('div', { className: "space-y-2",}
+                      , _react2.default.createElement(ScriptTask, { id: "p5_1", checked: checkedItems['p5_1'], onToggle: toggleCheck,}
+                        , _react2.default.createElement('strong', null, "Create STOW:" ), _react2.default.createElement('br', null)
+                        , _react2.default.createElement('span', { className: "text-xs text-slate-600 ml-4 block mt-1"    ,}, "• Assign personnel tech."
+                             , _react2.default.createElement('br', null), "• Click BOQ -> work Order task = Mobilise & Assess -> then Copy Task BOM BOQ."                , _react2.default.createElement('br', null), "• Change status to "    , _react2.default.createElement('strong', null, "ISSUE NOT YET ACCEPTED"   ), ". Apply Changes."
+                        )
+                      )
+                      , _react2.default.createElement(ScriptTask, { id: "p5_2", checked: checkedItems['p5_2'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Attach SAR:" ), " Upload the Connexa confirmation email to BOTH the STOW and Work Order (if applicable)."              )
+                    )
+                    , _react2.default.createElement('div', { className: "bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex items-start"      ,}
+                      , _react2.default.createElement(_lucidereact.Info, { className: "text-indigo-600 mr-3 shrink-0 mt-0.5"   , size: 20,} )
+                      , _react2.default.createElement('div', { className: "text-sm text-indigo-800" ,}, _react2.default.createElement('strong', null, "Tech Name Missing in Novus?"    ), " Assign the job to the Supervisor or Area Manager for that region. Do not call them for this admin error."                    )
+                    )
+                  )
+                )
+
+                /* PHASE 6: WRAP UP */
+                , currentPhase === 6 && (
+                  _react2.default.createElement('div', { className: "space-y-6 animate-in fade-in duration-300"   ,}
+                    , _react2.default.createElement('div', { className: "bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg mb-6"     ,}
+                      , _react2.default.createElement('p', { className: "text-sm text-green-800 font-medium"  ,}, _react2.default.createElement('strong', null, "Final Steps:" ), " Ensure all parties are informed and the interaction is closed correctly."           )
+                    )
+                    , _react2.default.createElement('div', { className: "space-y-2",}
+                      , _react2.default.createElement(ScriptTask, { id: "p6_1", checked: checkedItems['p6_1'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Email Tech Group:"  ), " Send email to the appropriate Tech Group advising the job is raised and SAR is attached."                )
+                      , _react2.default.createElement(ScriptTask, { id: "p6_2", checked: checkedItems['p6_2'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Reply to SNOC:"  ), " Reply to the original 2degrees SNOC email confirming actions taken."          )
+                      , _react2.default.createElement(ScriptTask, { id: "p6_3", checked: checkedItems['p6_3'], onToggle: toggleCheck,}, _react2.default.createElement('strong', null, "Close Interaction:" ), " Add wrap-up codes in Genesys and close the interaction."         )
+                    )
+                    , _react2.default.createElement('div', { className: "mt-8 text-center p-6 border-2 border-dashed border-slate-200 rounded-xl"      ,}
+                      , _react2.default.createElement(_lucidereact.CheckSquare, { size: 48, className: "mx-auto text-green-500 mb-3"  ,} )
+                      , _react2.default.createElement('h3', { className: "text-xl font-bold text-slate-800"  ,}, "Process Complete" )
+                      , _react2.default.createElement('p', { className: "text-sm text-slate-500 mt-2"  ,}, "You have successfully completed the dispatch process."      )
+                      , _react2.default.createElement('button', { onClick: resetScript, className: "mt-4 px-6 py-2 bg-slate-800 text-white rounded-lg font-medium hover:bg-slate-700"       ,}, "Start New Ticket"  )
+                    )
+                  )
+                )
+
+              )
+
+              , _react2.default.createElement('div', { className: "bg-slate-50 border-t border-slate-200 p-4 flex justify-between items-center"      ,}
+                , _react2.default.createElement('button', { 
+                  onClick: prevPhase,
+                  disabled: currentPhase === 1,
+                  className: `flex items-center px-4 py-2 rounded font-medium transition-colors ${currentPhase === 1 ? 'text-slate-300 cursor-not-allowed' : 'text-slate-700 bg-white border border-slate-300 hover:bg-slate-100'}`,}
+
+                  , _react2.default.createElement(_lucidereact.ChevronLeft, { size: 18, className: "mr-1",} ), " Back"
+                )
+
+                , currentPhase < 6 && (
+                  _react2.default.createElement('button', { 
+                    onClick: nextPhase,
+                    disabled: !canProceedToNextPhase(),
+                    className: `flex items-center px-6 py-2 rounded font-bold transition-colors shadow-sm ${canProceedToNextPhase() ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`,}
+, "Next Phase "
+                      , _react2.default.createElement(_lucidereact.ChevronRight, { size: 18, className: "ml-1",} )
+                  )
+                )
+              )
+            )
+
+          )
+        )
+
+        , showEscalations && (
+          _react2.default.createElement('div', { className: "w-full md:w-80 bg-white border-l border-slate-200 shadow-xl flex flex-col shrink-0 animate-in slide-in-from-right duration-300 z-10"            ,}
+            , _react2.default.createElement('div', { className: "p-4 bg-slate-900 text-white flex justify-between items-center"     ,}
+              , _react2.default.createElement('h2', { className: "font-bold flex items-center"  ,}, _react2.default.createElement(_lucidereact.AlertTriangle, { size: 18, className: "mr-2 text-red-400" ,}), " Quick Reference"  )
+              , _react2.default.createElement('button', { onClick: () => setShowEscalations(false), className: "text-slate-400 hover:text-white" ,}, "×")
+            )
+
+            , _react2.default.createElement('div', { className: "flex-1 overflow-y-auto p-4 space-y-6"   ,}
+
+              , _react2.default.createElement('div', { className: "border border-orange-200 rounded-lg overflow-hidden"   ,}
+                , _react2.default.createElement('div', { className: "bg-orange-50 p-2 border-b border-orange-200 font-bold text-orange-800 text-sm flex items-center"        ,}
+                  , _react2.default.createElement(_lucidereact.MonitorX, { size: 16, className: "mr-2",}), " Novus System Down"
+                )
+                , _react2.default.createElement('div', { className: "p-3 text-sm text-slate-700 space-y-2"   ,}
+                  , _react2.default.createElement('p', null, "Switch to "  , _react2.default.createElement('strong', null, "Manual Dispatch" ), ".")
+                  , _react2.default.createElement('ol', { className: "list-decimal ml-4 text-xs space-y-1"   ,}
+                    , _react2.default.createElement('li', null, "Call tech directly."  )
+                    , _react2.default.createElement('li', null, "Advise Novus is down (verbal details)."     )
+                    , _react2.default.createElement('li', null, "Email DL as normal."   )
+                    , _react2.default.createElement('li', null, "Log in manual Activity Log."    )
+                  )
+                  , _react2.default.createElement('div', { className: "mt-2 pt-2 border-t border-slate-100 text-xs"    ,}
+                    , _react2.default.createElement('strong', null, "Report to:" ), " novus@ventia.com" , _react2.default.createElement('br', null)
+                    , _react2.default.createElement('strong', { className: "text-red-600 mt-1 block"  ,}, "Email outage to Team Leader (Dipti)"     )
+                  )
+                )
+              )
+
+              , _react2.default.createElement('div', { className: "border border-indigo-200 rounded-lg overflow-hidden"   ,}
+                , _react2.default.createElement('div', { className: "bg-indigo-50 p-2 border-b border-indigo-200 font-bold text-indigo-800 text-sm flex items-center"        ,}
+                  , _react2.default.createElement(_lucidereact.Users, { size: 16, className: "mr-2",}), " Team Leader (Dipti)"
+                )
+                , _react2.default.createElement('div', { className: "p-3 text-sm text-slate-700 space-y-2"   ,}
+                  , _react2.default.createElement('div', { className: "text-xs",}
+                    , _react2.default.createElement('strong', { className: "text-slate-800",}, "Standard Issues:" ), _react2.default.createElement('br', null), "Email Dipti (CC Kirsty)"
+
+                  )
+                  , _react2.default.createElement('div', { className: "text-xs mt-2 pt-2 border-t border-slate-100"    ,}
+                    , _react2.default.createElement('strong', { className: "text-red-600",}, "Urgent/Critical:"), _react2.default.createElement('br', null), "Call Mobile / Teams Call immediately."
+
+                  )
+                )
+              )
+
+              , _react2.default.createElement('div', { className: "border border-slate-200 rounded-lg overflow-hidden"   ,}
+                , _react2.default.createElement('div', { className: "bg-slate-100 p-2 border-b border-slate-200 font-bold text-slate-800 text-sm flex items-center"        ,}
+                  , _react2.default.createElement(_lucidereact.MonitorX, { size: 16, className: "mr-2",}), " IT & Telephony"
+                )
+                , _react2.default.createElement('div', { className: "p-3 text-sm text-slate-700 space-y-3"   ,}
+                  , _react2.default.createElement('div', { className: "text-xs",}
+                    , _react2.default.createElement('strong', null, "SharePoint/Teams/Outlook:"), _react2.default.createElement('br', null)
+                    , _react2.default.createElement('span', { className: "font-mono bg-slate-100 px-1 rounded"   ,}, "0508 225 589"  )
+                  )
+                  , _react2.default.createElement('div', { className: "text-xs",}
+                    , _react2.default.createElement('strong', null, "PureCloud/Genesys (CVT):" ), _react2.default.createElement('br', null)
+                    , _react2.default.createElement('span', { className: "font-mono bg-slate-100 px-1 rounded"   ,}, "1300 000 288"  ), _react2.default.createElement('br', null), "support@cvt.com.au"
+
+                  )
+                )
+              )
+
+            )
+          )
+        )
+
+      )
+    )
+  );
+};
+
+exports. default = GenesysGuidedScript;
+</script></head>
+  <body>
+  
+
+<div id="preview-app"></div></body></html>
